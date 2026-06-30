@@ -4,6 +4,7 @@ import { DashboardSummary } from "@/components/dashboard-summary";
 import { DailyPlanPanel } from "@/components/daily-plan-panel";
 import { MentorPanel } from "@/components/mentor-panel";
 import { RoadmapPanel } from "@/components/roadmap-panel";
+import { StreakCard } from "@/components/streak-card";
 
 const tasks = [
   { title: "Review floorplanning basics", time: "45 min", complete: true },
@@ -75,13 +76,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </div>
             <div className="flex flex-col gap-3">
               <DashboardClock />
-              <div className="glass-card rounded-2xl px-4 py-3 text-right">
-                <p className="text-xs uppercase tracking-[0.24em] text-muted">
-                  Mode
-                </p>
-                <p className="mt-1 text-lg font-semibold">Placement Mode</p>
-                <p className="text-sm text-[#3dd598]">12 day streak</p>
-              </div>
+            <StreakCard />
             </div>
           </div>
 
