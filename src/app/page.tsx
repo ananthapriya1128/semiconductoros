@@ -4,9 +4,12 @@ import { DashboardClock } from "@/components/dashboard-clock";
 import { DashboardSummary } from "@/components/dashboard-summary";
 import { DailyPlanPanel } from "@/components/daily-plan-panel";
 import { EDACheatSheetPanel } from "@/components/eda-cheat-sheet-panel";
+import { FlashcardSystem } from "@/components/flashcard-system";
+import { InterviewQuestionBank } from "@/components/interview-question-bank";
 import { JobTrackerPanel } from "@/components/job-tracker-panel";
 import { MentorPanel } from "@/components/mentor-panel";
 import { MockInterviewPanel } from "@/components/mock-interview-panel";
+import { ProjectIdeaGenerator } from "@/components/project-idea-generator";
 import { RoadmapPanel } from "@/components/roadmap-panel";
 import { StreakCard } from "@/components/streak-card";
 import { getNewsFromClaude } from "@/lib/news";
@@ -103,7 +106,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-6">
           <MentorPanel
             hasLiveClaudeKey={hasLiveClaudeKey}
@@ -111,6 +114,9 @@ export default async function Home({ searchParams }: HomeProps) {
           />
           <MockInterviewPanel />
           <DailyMicroQuizPanel />
+          <FlashcardSystem />
+          <ProjectIdeaGenerator />
+          <InterviewQuestionBank />
         </div>
 
         <div className="flex flex-col gap-6">
