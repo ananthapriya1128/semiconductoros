@@ -38,17 +38,21 @@ const initialMessages: Message[] = [
 
 const CHAT_STORAGE_KEY = "semiconductoros-mentor-history";
 
-function loadMentorMemory(): AgentMemory {
-  const memory: AgentMemory = {
+function loadMentorMemory(): AgentMemory & { flashcards: any[]; quizHistory: any[] } {
+  const memory: AgentMemory & { flashcards: any[]; quizHistory: any[] } = {
     career: DEFAULT_CAREER_MEMORY,
     dailyPlan: createDefaultDailyPlan(),
     roadmap: DEFAULT_ROADMAP,
+    flashcards: [],
+    quizHistory: [],
   };
 
   try {
     const careerRaw = window.localStorage.getItem(STORAGE_KEYS.career);
     const dailyPlanRaw = window.localStorage.getItem(STORAGE_KEYS.dailyPlan);
     const roadmapRaw = window.localStorage.getItem(STORAGE_KEYS.roadmap);
+    const flashcardsRaw = window.localStorage.getItem("semiconductoros-flashcards");
+    const quizHistoryRaw = window.localStorage.getItem("semiconductoros-microquiz");
 
     if (careerRaw) {
       memory.career = JSON.parse(careerRaw) as AgentMemory["career"];
@@ -60,6 +64,14 @@ function loadMentorMemory(): AgentMemory {
 
     if (roadmapRaw) {
       memory.roadmap = JSON.parse(roadmapRaw) as AgentMemory["roadmap"];
+    }
+
+    if (flashcardsRaw) {
+      memory.flashcards = JSON.parse(flashcardsRaw);
+    }
+
+    if (quizHistoryRaw) {
+      memory.quizHistory = JSON.parse(quizHistoryRaw);
     }
   } catch {
     // Ignore malformed memory and continue with defaults.
@@ -81,6 +93,8 @@ export function MentorPanel({
     career: DEFAULT_CAREER_MEMORY,
     dailyPlan: createDefaultDailyPlan(),
     roadmap: DEFAULT_ROADMAP,
+    flashcards: [],
+    quizHistory: [],
   });
   const canSend = useMemo(
     () => input.trim().length > 0 && !isLoading,
@@ -247,6 +261,14 @@ export function MentorPanel({
           <div>
             <p className="text-muted">Incomplete Tasks</p>
             <p className="font-medium">{userMemory.dailyPlan.tasks.filter(t => !t.completed).length} tasks</p>
+          </div>
+          <div>
+            <p className="text-muted">Flashcards</p>
+            <p className="font-medium">{userMemory.flashcards.length} cards</p>
+          </div>
+          <div>
+            <p className="text-muted">Quiz Streak</p>
+            <p className="font-medium">{userMemory.quizHistory.filter(h => h.completed).length} days</p>
           </div>
         </div>
       </div>

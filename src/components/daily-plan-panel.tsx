@@ -74,6 +74,16 @@ export function DailyPlanPanel() {
   async function generatePlan() {
     setIsGenerating(true);
     try {
+      // Load flashcards and quiz history to send to API
+      let flashcards = [];
+      let quizHistory = [];
+      try {
+        const flashcardsRaw = window.localStorage.getItem("semiconductoros-flashcards");
+        const quizHistoryRaw = window.localStorage.getItem("semiconductoros-microquiz");
+        if (flashcardsRaw) flashcards = JSON.parse(flashcardsRaw);
+        if (quizHistoryRaw) quizHistory = JSON.parse(quizHistoryRaw);
+      } catch {}
+
       const response = await fetch("/api/generate-plan", {
         method: "POST",
         headers: {
@@ -81,6 +91,8 @@ export function DailyPlanPanel() {
         },
         body: JSON.stringify({
           availableMinutes: Number(availableMinutes),
+          flashcards,
+          quizHistory,
         }),
       });
 

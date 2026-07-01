@@ -39,6 +39,8 @@ Rules:
 type GeneratePlanRequest = {
   availableMinutes: number;
   memory?: AgentMemory;
+  flashcards?: any[];
+  quizHistory?: any[];
 };
 
 function normalizeMemory(memory?: AgentMemory): AgentMemory {
@@ -49,7 +51,7 @@ function normalizeMemory(memory?: AgentMemory): AgentMemory {
   };
 }
 
-function buildMemorySummary(memory?: AgentMemory) {
+function buildMemorySummary(memory?: AgentMemory, flashcards?: any[], quizHistory?: any[]) {
   const normalizedMemory = normalizeMemory(memory);
   const roadmapPriority = getRoadmapPriority(normalizedMemory.roadmap)
     .map((item) => `${item.title} (${item.progress}%)`)
@@ -60,13 +62,23 @@ function buildMemorySummary(memory?: AgentMemory) {
     .map((task) => `${task.title} (${task.durationMinutes} min)`)
     .join(", ");
 
+  const flashcardSummary = flashcards && flashcards.length > 0
+    ? `Flashcards (${flashcards.length} total): ${flashcards.slice(0, 5).map(f => f.question).join(", ")}${flashcards.length > 5 ? "..." : ""}`
+    : "No flashcards saved";
+
+  const quizSummary = quizHistory && quizHistory.length > 0
+    ? `Quiz streak: ${quizHistory.filter(h => h.completed).length} days`
+    : "No quiz history";
+
   return `Saved user memory:
 - Target role: ${normalizedMemory.career.targetRole}
 - Interview track: ${normalizedMemory.career.interviewTrack}
 - Weekly focus: ${normalizedMemory.career.weeklyFocus}
 - Current skills: ${normalizedMemory.career.currentSkills.join(", ")}
 - Roadmap priorities: ${roadmapPriority || "No roadmap saved"}
-- Incomplete tasks from previous plans: ${incompleteTasks || "None"}`;
+- Incomplete tasks from previous plans: ${incompleteTasks || "None"}
+- ${flashcardSummary}
+- ${quizSummary}`;
 }
 
 function generateFallbackPlan(availableMinutes: number): DailyPlanMemory {
@@ -104,6 +116,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as GeneratePlanRequest;
     const availableMinutes = body.availableMinutes || 120;
     const memory = normalizeMemory(body.memory);
+    const { flashcards, quizHistory } = body;
     const apiKey = process.env.CLAUDE_API_KEY?.trim();
 
     if (!hasConfiguredClaudeKey()) {
@@ -126,7 +139,7 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "user",
-            content: `${buildMemorySummary(memory)}\n\nAvailable study time today: ${availableMinutes} minutes. Generate a daily plan.`,
+            content: `${buildMemorySummary(memory, flashcards, quizHistory)}\n\nAvailable study time today: ${availableMinutes} minutes. Generate a daily plan.`,
           },
         ],
       }),

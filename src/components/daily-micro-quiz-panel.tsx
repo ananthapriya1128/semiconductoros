@@ -2,25 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const QUESTION_BANK = [
-  { id: 1, question: "What is CTS?", answer: "Clock Tree Synthesis", category: "CTS" },
-  { id: 2, question: "What is setup time?", answer: "Min time data must be stable before clock", category: "Timing" },
-  { id: 3, question: "What is hold time?", answer: "Min time data must be stable after clock", category: "Timing" },
-  { id: 4, question: "What is skew?", answer: "Difference in clock arrival times", category: "Timing" },
-  { id: 5, question: "What is congestion?", answer: "Not enough routing tracks in an area", category: "Routing" },
-  { id: 6, question: "What does STA stand for?", answer: "Static Timing Analysis", category: "STA" },
-  { id: 7, question: "What is a flip-flop?", answer: "Sequential logic element (memory)", category: "Basics" },
-  { id: 8, question: "What is floorplanning?", answer: "Placement of macros and IO pins", category: "Floorplan" },
-  { id: 9, question: "What is DRC?", answer: "Design Rule Check", category: "Signoff" },
-  { id: 10, question: "What is LVS?", answer: "Layout Versus Schematic", category: "Signoff" },
-  { id: 11, question: "What is TCL?", answer: "Tool Command Language", category: "Scripting" },
-  { id: 12, question: "What is GDS?", answer: "Graphic Data System (layout file)", category: "Files" },
-  { id: 13, question: "What is Verilog?", answer: "Hardware Description Language", category: "Basics" },
-  { id: 14, question: "What is synthesis?", answer: "RTL to netlist conversion", category: "Flow" },
-  { id: 15, question: "What is placement?", answer: "Placing standard cells on die", category: "Flow" }
-];
+const FLASHCARD_STORAGE_KEY = "semiconductoros-flashcards";
+const QUIZ_STORAGE_KEY = "semiconductoros-microquiz";
 
-const STORAGE_KEY = "semiconductoros-microquiz";
+type Flashcard = {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  lastReviewedAt?: number;
+  nextReviewAt?: number;
+  correctCount?: number;
+  wrongCount?: number;
+};
 
 function getTodayKey() {
   const date = new Date();
@@ -30,28 +24,43 @@ function getTodayKey() {
 export function DailyMicroQuizPanel() {
   const hasHydrated = useRef(false);
   const [history, setHistory] = useState<any[]>([]);
-  const [todaysQuestions, setTodaysQuestions] = useState<number[]>([]);
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const [todaysQuestions, setTodaysQuestions] = useState<string[]>([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
-  const [answers, setAnswers] = useState<{ [key: number]: boolean }>({});
+  const [answers, setAnswers] = useState<{ [key: string]: boolean }>({});
   const [showResults, setShowResults] = useState(false);
 
   // Initial load from localStorage
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const loaded = raw ? JSON.parse(raw) : [];
-      const today = getTodayKey();
-      const existing = loaded.find((h: any) => h.date === today);
+      // Load flashcards
+      const flashRaw = localStorage.getItem(FLASHCARD_STORAGE_KEY);
+      let loadedFlashcards: Flashcard[] = flashRaw
+        ? JSON.parse(flashRaw)
+        : [
+            { id: "1", question: "What is CTS?", answer: "Clock Tree Synthesis", category: "CTS" },
+            { id: "2", question: "What is setup time?", answer: "Min time data must be stable before clock", category: "Timing" },
+            { id: "3", question: "What is hold time?", answer: "Min time data must be stable after clock", category: "Timing" },
+            { id: "4", question: "What is skew?", answer: "Difference in clock arrival times", category: "Timing" },
+            { id: "5", question: "What is congestion?", answer: "Not enough routing tracks in an area", category: "Routing" },
+          ];
+      setFlashcards(loadedFlashcards);
 
-      // Shuffle and pick 5 questions
-      const shuffled = [...QUESTION_BANK]
+      // Load quiz history
+      const quizRaw = localStorage.getItem(QUIZ_STORAGE_KEY);
+      const loadedQuiz = quizRaw ? JSON.parse(quizRaw) : [];
+      const today = getTodayKey();
+      const existing = loadedQuiz.find((h: any) => h.date === today);
+
+      // Pick questions from flashcards
+      const shuffled = [...loadedFlashcards]
         .sort(() => 0.5 - Math.random())
         .slice(0, 5)
         .map((q) => q.id);
 
       setTodaysQuestions(shuffled);
-      setHistory(loaded);
+      setHistory(loadedQuiz);
 
       if (existing) {
         setAnswers(existing.answers);
@@ -61,7 +70,7 @@ export function DailyMicroQuizPanel() {
     hasHydrated.current = true;
   }, []);
 
-  // Save to localStorage only when relevant state changes
+  // Save to localStorage
   useEffect(() => {
     if (!hasHydrated.current) return;
 
@@ -87,20 +96,20 @@ export function DailyMicroQuizPanel() {
       ];
     }
 
-    // Only update state if the content actually changed
     const oldStr = JSON.stringify(history);
     const newStr = JSON.stringify(updated);
     if (oldStr !== newStr) {
-      localStorage.setItem(STORAGE_KEY, newStr);
+      localStorage.setItem(QUIZ_STORAGE_KEY, newStr);
       setHistory(updated);
     }
-  }, [showResults, answers]); // Removed history from dependencies to avoid loop!
+  }, [showResults, answers]);
 
   function submitAnswer() {
     const questionId = todaysQuestions[currentQIndex];
-    const question = QUESTION_BANK.find(q => q.id === questionId)!;
+    const question = flashcards.find(q => q.id === questionId)!;
     const correct = userAnswer.toLowerCase().includes(question.answer.toLowerCase());
     setAnswers({ ...answers, [questionId]: correct });
+
     if (currentQIndex < todaysQuestions.length - 1) {
       setCurrentQIndex(currentQIndex + 1);
       setUserAnswer("");
@@ -117,7 +126,7 @@ export function DailyMicroQuizPanel() {
         <div>
           <h2 className="text-lg font-semibold">Daily Micro-Quiz</h2>
           <p className="mt-1 text-sm text-muted">
-            Quick 5-question quiz to reinforce learning!
+            Quiz based on your flashcards! 📚
           </p>
         </div>
         {streak > 0 && (
@@ -134,13 +143,13 @@ export function DailyMicroQuizPanel() {
             <span>Question {currentQIndex + 1} of {todaysQuestions.length}</span>
             {todaysQuestions[currentQIndex] && (
               <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1">
-                {QUESTION_BANK.find(q => q.id === todaysQuestions[currentQIndex])?.category}
+                {flashcards.find(q => q.id === todaysQuestions[currentQIndex])?.category}
               </span>
             )}
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
             <p className="text-lg font-medium">
-              {QUESTION_BANK.find(q => q.id === todaysQuestions[currentQIndex])?.question}
+              {flashcards.find(q => q.id === todaysQuestions[currentQIndex])?.question}
             </p>
           </div>
           <div>
@@ -169,13 +178,13 @@ export function DailyMicroQuizPanel() {
               {Object.values(answers).filter(Boolean).length} / {todaysQuestions.length}
             </p>
             <p className="mt-1 text-sm text-muted">
-              Great job! Come back tomorrow for a new quiz!
+              Great job! Add more flashcards to expand your quiz! 👍
             </p>
           </div>
 
           <div className="space-y-3">
             {todaysQuestions.map(id => {
-              const q = QUESTION_BANK.find(x => x.id === id)!;
+              const q = flashcards.find(x => x.id === id)!;
               return (
                 <div key={id} className="rounded-2xl border border-white/8 bg-white/4 p-4">
                   <div className="flex items-start gap-3">
@@ -184,7 +193,7 @@ export function DailyMicroQuizPanel() {
                     </span>
                     <div className="flex-1">
                       <p className="font-medium">{q.question}</p>
-                      <p className="mt-1 text-sm text-muted">
+                      <p className="mt-1 text-sm text-white/80">
                         Correct answer: {q.answer}
                       </p>
                     </div>
