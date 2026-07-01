@@ -1,24 +1,8 @@
-import { CareerMemoryPanel } from "@/components/career-memory-panel";
-import { DailyMicroQuizPanel } from "@/components/daily-micro-quiz-panel";
 import { DashboardClock } from "@/components/dashboard-clock";
 import { DashboardSummary } from "@/components/dashboard-summary";
-import { DailyPlanPanel } from "@/components/daily-plan-panel";
-import { EDACheatSheetPanel } from "@/components/eda-cheat-sheet-panel";
-import { FlashcardSystem } from "@/components/flashcard-system";
-import { InterviewQuestionBank } from "@/components/interview-question-bank";
-import { JobTrackerPanel } from "@/components/job-tracker-panel";
-import { MentorPanel } from "@/components/mentor-panel";
-import { MockInterviewPanel } from "@/components/mock-interview-panel";
-import { ProjectIdeaGenerator } from "@/components/project-idea-generator";
-import { RoadmapPanel } from "@/components/roadmap-panel";
 import { StreakCard } from "@/components/streak-card";
+import { TabbedDashboard } from "@/components/tabbed-dashboard";
 import { getNewsFromClaude } from "@/lib/news";
-
-const careerFocus = [
-  "Master floorplanning, placement, CTS, routing, and STA in sequence",
-  "Revise Linux and TCL daily for EDA workflow confidence",
-  "Prepare company-specific answers for NVIDIA, AMD, Intel, Cadence, and Synopsys",
-];
 
 type HomeProps = {
   searchParams: Promise<{
@@ -72,13 +56,12 @@ export default async function Home({ searchParams }: HomeProps) {
                 Priya&apos;s AI semiconductor dashboard
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-base">
-                Fast MVP focused on one thing: getting your AI mentor live on
-                your phone home screen with a clean daily study dashboard.
+                Your personal AI mentor to help you land a Physical Design Engineer job!
               </p>
             </div>
             <div className="flex flex-col gap-3">
               <DashboardClock />
-            <StreakCard />
+              <StreakCard />
             </div>
           </div>
 
@@ -106,58 +89,12 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="flex flex-col gap-6">
-          <MentorPanel
-            hasLiveClaudeKey={hasLiveClaudeKey}
-            initialPrompt={initialPrompt}
-          />
-          <MockInterviewPanel />
-          <DailyMicroQuizPanel />
-          <FlashcardSystem />
-          <ProjectIdeaGenerator />
-          <InterviewQuestionBank />
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <DailyPlanPanel />
-
-          <CareerMemoryPanel />
-
-          <RoadmapPanel />
-
-          <JobTrackerPanel />
-
-          <EDACheatSheetPanel />
-
-          <div className="glass-card rounded-[28px] p-5">
-            <h2 className="text-lg font-semibold">Career Focus</h2>
-            <div className="mt-4 space-y-3">
-              {careerFocus.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-2xl border border-white/8 bg-white/4 p-4 text-sm leading-6 text-white/90"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass-card rounded-[28px] p-5">
-            <h2 className="text-lg font-semibold">Semiconductor News</h2>
-            <div className="mt-4 space-y-3">
-              {news.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-2xl border border-white/8 bg-white/4 p-4 text-sm leading-6 text-white/90"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      <section className="mt-6">
+        <TabbedDashboard
+          hasLiveClaudeKey={hasLiveClaudeKey}
+          initialPrompt={initialPrompt}
+          news={news}
+        />
       </section>
     </main>
   );
