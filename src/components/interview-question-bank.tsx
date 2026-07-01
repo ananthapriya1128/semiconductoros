@@ -142,7 +142,7 @@ export function InterviewQuestionBank() {
   const [selectedCompany, setSelectedCompany] = useState("All");
 
   const categories = ["All", ...new Set(QUESTIONS.map(q => q.category))];
-  const companies = ["All", ...new Set(QUESTIONS.flatMap(q => q.companies))];
+  const companies = ["All", ...new Set(QUESTIONS.flatMap(q => q.companies).filter(c => c !== "All"))];
 
   const filteredQuestions = QUESTIONS.filter(q => {
     const categoryOk = selectedCategory === "All" || q.category === selectedCategory;
