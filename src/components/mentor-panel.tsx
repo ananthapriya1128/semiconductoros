@@ -1,12 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   createDefaultDailyPlan,
   DEFAULT_CAREER_MEMORY,
   DEFAULT_ROADMAP,
   STORAGE_KEYS,
+  MEMORY_UPDATED_EVENT,
   type AgentMemory,
 } from "@/lib/agent-memory";
 
@@ -76,6 +77,11 @@ export function MentorPanel({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userMemory, setUserMemory] = useState<ReturnType<typeof loadMentorMemory>>({
+    career: DEFAULT_CAREER_MEMORY,
+    dailyPlan: createDefaultDailyPlan(),
+    roadmap: DEFAULT_ROADMAP,
+  });
   const canSend = useMemo(
     () => input.trim().length > 0 && !isLoading,
     [input, isLoading],
@@ -98,6 +104,7 @@ export function MentorPanel({
     } catch {
       // Ignore malformed local state and continue with the default mentor greeting.
     } finally {
+      setUserMemory(loadMentorMemory());
       hasHydratedRef.current = true;
     }
   }, []);
@@ -110,7 +117,16 @@ export function MentorPanel({
     window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
   }, [messages]);
 
-  async function sendMessage(prompt: string) {
+  useEffect(() => {
+    function updateMemory() {
+      setUserMemory(loadMentorMemory());
+    }
+
+    window.addEventListener(MEMORY_UPDATED_EVENT, updateMemory);
+    return () => window.removeEventListener(MEMORY_UPDATED_EVENT, updateMemory);
+  }, []);
+
+  const sendMessage = useCallback(async (prompt: string) => {
     const trimmed = prompt.trim();
 
     if (!trimmed || isLoading) {
@@ -161,7 +177,7 @@ export function MentorPanel({
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [messages, isLoading]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -188,7 +204,7 @@ export function MentorPanel({
 
     autoPromptRef.current = prompt;
     void sendMessage(prompt);
-  }, [initialPrompt, isLoading]);
+  }, [initialPrompt, isLoading, sendMessage]);
 
   return (
     <section
@@ -211,11 +227,35 @@ export function MentorPanel({
         </div>
       </div>
 
+      <div className="mt-4 rounded-2xl border border-white/8 bg-white/4 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted mb-2">
+          Your Progress
+        </p>
+        <div className="grid gap-2 text-xs sm:grid-cols-2">
+          <div>
+            <p className="text-muted">Target Role</p>
+            <p className="font-medium">{userMemory.career.targetRole}</p>
+          </div>
+          <div>
+            <p className="text-muted">Weekly Focus</p>
+            <p className="font-medium">{userMemory.career.weeklyFocus}</p>
+          </div>
+          <div>
+            <p className="text-muted">Today's Goal</p>
+            <p className="font-medium">{userMemory.dailyPlan.goal}</p>
+          </div>
+          <div>
+            <p className="text-muted">Incomplete Tasks</p>
+            <p className="font-medium">{userMemory.dailyPlan.tasks.filter(t => !t.completed).length} tasks</p>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-3 flex items-start justify-between gap-3">
         <p className="text-sm leading-6 text-muted">
           {hasLiveClaudeKey
             ? "Live Claude responses are enabled for the mentor."
-            : "The mentor now remembers your recent conversation on this device. Add a real Claude API key in .env.local to enable live AI replies."}
+            : "The mentor remembers your conversation and progress on this device. Add a real Claude API key in .env.local to enable live AI replies."}
         </p>
         <button
           type="button"

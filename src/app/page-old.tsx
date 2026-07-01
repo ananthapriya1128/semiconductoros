@@ -1,15 +1,22 @@
 import { CareerMemoryPanel } from "@/components/career-memory-panel";
-import { DailyMicroQuizPanel } from "@/components/daily-micro-quiz-panel";
 import { DashboardClock } from "@/components/dashboard-clock";
 import { DashboardSummary } from "@/components/dashboard-summary";
 import { DailyPlanPanel } from "@/components/daily-plan-panel";
-import { EDACheatSheetPanel } from "@/components/eda-cheat-sheet-panel";
-import { JobTrackerPanel } from "@/components/job-tracker-panel";
 import { MentorPanel } from "@/components/mentor-panel";
-import { MockInterviewPanel } from "@/components/mock-interview-panel";
 import { RoadmapPanel } from "@/components/roadmap-panel";
 import { StreakCard } from "@/components/streak-card";
-import { getNewsFromClaude } from "@/lib/news";
+
+const tasks = [
+  { title: "Review floorplanning basics", time: "45 min", complete: true },
+  { title: "Practice Linux commands", time: "30 min", complete: false },
+  { title: "Solve 5 interview questions", time: "40 min", complete: false },
+];
+
+const news = [
+  "NVIDIA expands AI infrastructure demand for advanced packaging.",
+  "TSMC pushes new node roadmap with tighter performance-per-watt targets.",
+  "Cadence and Synopsys continue to shape AI-assisted EDA workflows.",
+];
 
 const careerFocus = [
   "Master floorplanning, placement, CTS, routing, and STA in sequence",
@@ -40,11 +47,6 @@ const quickActions = [
     label: "Review notes",
     prompt: "Summarize what I should remember about CTS for interviews",
   },
-  {
-    label: "Mock Interview",
-    prompt: "",
-    anchor: "#mentor"
-  }
 ];
 
 export default async function Home({ searchParams }: HomeProps) {
@@ -56,7 +58,6 @@ export default async function Home({ searchParams }: HomeProps) {
       process.env.CLAUDE_API_KEY !== "your_claude_api_key_here" &&
       !process.env.CLAUDE_API_KEY?.toLowerCase().includes("replace_with"),
   );
-  const news = await getNewsFromClaude();
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -88,10 +89,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 {quickActions.map((action) => (
                   <a
                     key={action.label}
-                    href={action.prompt
-                      ? `/?prompt=${encodeURIComponent(action.prompt)}#mentor`
-                      : "#mentor"
-                    }
+                    href={`/?prompt=${encodeURIComponent(action.prompt)}#mentor`}
                     className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90"
                   >
                     {action.label}
@@ -103,15 +101,11 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-        <div className="flex flex-col gap-6">
-          <MentorPanel
-            hasLiveClaudeKey={hasLiveClaudeKey}
-            initialPrompt={initialPrompt}
-          />
-          <MockInterviewPanel />
-          <DailyMicroQuizPanel />
-        </div>
+      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <MentorPanel
+          hasLiveClaudeKey={hasLiveClaudeKey}
+          initialPrompt={initialPrompt}
+        />
 
         <div className="flex flex-col gap-6">
           <DailyPlanPanel />
@@ -119,10 +113,6 @@ export default async function Home({ searchParams }: HomeProps) {
           <CareerMemoryPanel />
 
           <RoadmapPanel />
-
-          <JobTrackerPanel />
-
-          <EDACheatSheetPanel />
 
           <div className="glass-card rounded-[28px] p-5">
             <h2 className="text-lg font-semibold">Career Focus</h2>

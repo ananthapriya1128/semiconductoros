@@ -18,15 +18,29 @@ function formatNow(date: Date) {
 }
 
 export function DashboardClock() {
+  const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(() => formatNow(new Date()));
 
   useEffect(() => {
+    setMounted(true);
+    setNow(formatNow(new Date()));
     const timer = window.setInterval(() => {
       setNow(formatNow(new Date()));
     }, 1000 * 30);
 
     return () => window.clearInterval(timer);
   }, []);
+
+  if (!mounted) {
+    // Render a placeholder until mounted
+    return (
+      <div className="glass-card rounded-2xl px-4 py-3 text-right">
+        <p className="text-xs uppercase tracking-[0.24em] text-muted">Now</p>
+        <p className="mt-1 text-lg font-semibold">--:-- --</p>
+        <p className="text-sm text-muted">-- --- --</p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card rounded-2xl px-4 py-3 text-right">

@@ -7,6 +7,7 @@ export function StreakCard() {
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStreak(getCurrentStreak());
   }, []);
 
@@ -33,7 +34,7 @@ export function StreakCard() {
         onClick={handleCompleteStudy}
         className="mt-3 rounded-lg bg-[#3dd598] px-3 py-2 text-sm font-medium text-black hover:opacity-90"
       >
-        ✅ Complete Today's Study
+        ✅ Complete Today&apos;s Study
       </button>
     </div>
   );

@@ -28,6 +28,7 @@ export function CareerMemoryPanel() {
   const [career, setCareer] = useState<CareerProfileMemory>(DEFAULT_CAREER_MEMORY);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCareer(loadCareerMemory());
     hasHydratedRef.current = true;
   }, []);

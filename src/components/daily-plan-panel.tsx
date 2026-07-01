@@ -50,10 +50,13 @@ export function DailyPlanPanel() {
   const [rolledOverCount, setRolledOverCount] = useState(0);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskMinutes, setNewTaskMinutes] = useState("30");
+  const [availableMinutes, setAvailableMinutes] = useState("120");
+  const [isGenerating, setIsGenerating] = useState(false);
   const plannedHours = useMemo(() => getPlannedHours(plan), [plan]);
 
   useEffect(() => {
     const loaded = loadDailyPlan();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPlan(loaded.plan);
     setRolledOverCount(loaded.rolledOverCount);
     hasHydratedRef.current = true;
@@ -67,6 +70,30 @@ export function DailyPlanPanel() {
     window.localStorage.setItem(STORAGE_KEYS.dailyPlan, JSON.stringify(plan));
     window.dispatchEvent(new Event(MEMORY_UPDATED_EVENT));
   }, [plan]);
+
+  async function generatePlan() {
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/generate-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          availableMinutes: Number(availableMinutes),
+        }),
+      });
+
+      const data = await response.json();
+      if (data.plan) {
+        setPlan(data.plan);
+      }
+    } catch {
+      // Fallback handled by API
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   function toggleTask(id: string) {
     setPlan((current) => ({
@@ -131,6 +158,26 @@ export function DailyPlanPanel() {
           into today&apos;s plan.
         </div>
       ) : null}
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_120px_auto]">
+        <input
+          value={availableMinutes}
+          onChange={(e) => setAvailableMinutes(e.target.value)}
+          type="number"
+          min="30"
+          step="15"
+          placeholder="Available study time (minutes)"
+          className="rounded-2xl border border-white/10 bg-[#07101d] px-4 py-3 text-sm text-white outline-none"
+        />
+        <button
+          type="button"
+          onClick={generatePlan}
+          disabled={isGenerating}
+          className="rounded-2xl bg-[linear-gradient(135deg,#3dd598,#2cc689)] px-4 py-3 font-semibold text-slate-950 disabled:opacity-50"
+        >
+          {isGenerating ? "Generating..." : "Generate Plan"}
+        </button>
+      </div>
 
       <div className="mt-4">
         <label className="text-sm text-muted" htmlFor="goal-input">
