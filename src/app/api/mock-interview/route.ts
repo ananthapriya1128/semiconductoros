@@ -84,11 +84,22 @@ function normalizeMemory(memory?: AgentMemory) {
 
 function buildMemorySummary(memory?: AgentMemory) {
   const normalizedMemory = normalizeMemory(memory);
+
   const roadmapPriority = getRoadmapPriority(normalizedMemory.roadmap)
-    .map((item) => `${item.title} (${item.progress}%)")
-    .join(", ");
+  .map((item) => {
+    const progress =
+      item.estimatedHours > 0
+        ? Math.round((item.completedHours / item.estimatedHours) * 100)
+        : 0;
+
+    return `${item.title} (${progress}%)`;
+  })
+  .join(", ");
+
   const currentSkills = normalizedMemory.career.currentSkills.join(", ");
+
   return `Candidate information:
+
 - Target role: ${normalizedMemory.career.targetRole}
 - Interview track: ${normalizedMemory.career.interviewTrack}
 - Weekly focus: ${normalizedMemory.career.weeklyFocus}

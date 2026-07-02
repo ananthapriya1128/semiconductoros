@@ -51,24 +51,40 @@ function normalizeMemory(memory?: AgentMemory): AgentMemory {
   };
 }
 
-function buildMemorySummary(memory?: AgentMemory, flashcards?: any[], quizHistory?: any[]) {
-  const normalizedMemory = normalizeMemory(memory);
+function buildMemorySummary(
+  normalizedMemory: AgentMemory,
+  flashcards?: any[],
+  quizHistory?: any[]
+): string {
   const roadmapPriority = getRoadmapPriority(normalizedMemory.roadmap)
-    .map((item) => `${item.title} (${item.progress}%)`)
+    .map((item) => {
+      const progress =
+        item.estimatedHours > 0
+          ? Math.round((item.completedHours / item.estimatedHours) * 100)
+          : 0;
+
+      return `${item.title} (${progress}%)`;
+    })
     .join(", ");
+
   const incompleteTasks = normalizedMemory.dailyPlan.tasks
     .filter((task) => !task.completed)
     .slice(0, 4)
     .map((task) => `${task.title} (${task.durationMinutes} min)`)
     .join(", ");
 
-  const flashcardSummary = flashcards && flashcards.length > 0
-    ? `Flashcards (${flashcards.length} total): ${flashcards.slice(0, 5).map(f => f.question).join(", ")}${flashcards.length > 5 ? "..." : ""}`
-    : "No flashcards saved";
+  const flashcardSummary =
+    flashcards && flashcards.length > 0
+      ? `Flashcards (${flashcards.length} total): ${flashcards
+          .slice(0, 5)
+          .map((f) => f.question)
+          .join(", ")}${flashcards.length > 5 ? "..." : ""}`
+      : "No flashcards saved";
 
-  const quizSummary = quizHistory && quizHistory.length > 0
-    ? `Quiz streak: ${quizHistory.filter(h => h.completed).length} days`
-    : "No quiz history";
+  const quizSummary =
+    quizHistory && quizHistory.length > 0
+      ? `Quiz streak: ${quizHistory.filter((h) => h.completed).length} days`
+      : "No quiz history";
 
   return `Saved user memory:
 - Target role: ${normalizedMemory.career.targetRole}
@@ -80,7 +96,6 @@ function buildMemorySummary(memory?: AgentMemory, flashcards?: any[], quizHistor
 - ${flashcardSummary}
 - ${quizSummary}`;
 }
-
 function generateFallbackPlan(availableMinutes: number): DailyPlanMemory {
   const today = getTodayKey();
   const tasks = [

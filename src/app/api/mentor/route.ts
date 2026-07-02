@@ -165,7 +165,14 @@ function normalizeMemory(memory?: AgentMemory): AgentMemory {
 function buildMemorySummary(memory?: AgentMemory) {
   const normalizedMemory = normalizeMemory(memory);
   const roadmapPriority = getRoadmapPriority(normalizedMemory.roadmap)
-    .map((item) => `${item.title} (${item.progress}%)`)
+    .map((item) => {
+  const progress =
+    item.estimatedHours > 0
+      ? Math.round((item.completedHours / item.estimatedHours) * 100)
+      : 0;
+
+  return `${item.title} (${progress}%)`;
+})
     .join(", ");
   const incompleteTasks = normalizedMemory.dailyPlan.tasks
     .filter((task) => !task.completed)
